@@ -19,7 +19,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
 from rdkit import Chem
-from rdkit.Chem import Draw, PandasTools, AllChem
 import mordred
 from mordred import Calculator, descriptors
 
