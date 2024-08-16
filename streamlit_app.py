@@ -9,7 +9,7 @@ import mordred
 from mordred import Calculator, descriptors
 
 # Set the page configuration
-st.set_page_config(page_title="QSAR Prediction App", page_icon="📊")
+st.set_page_config(page_title="QSAR pKi Prediction App", page_icon="📊")
 
 # Home page with explanations
 st.sidebar.title("About")
@@ -90,7 +90,7 @@ st.write("Enter the SMILES notation of the compound you want to predict")
 st.write("Not sure what SMILES notation is? It's a string representation of any compound made so that computers can understand them, you can find some examples of [CHEMBL](%s)" % "https://www.ebi.ac.uk/chembl/")
 
 # Add drag-and-drop option for SMILES files
-uploaded_file = st.file_uploader("Upload a .txt file containing SMILES", type=["txt"])
+uploaded_file = st.file_uploader("Upload a .txt file containing the SMILES you want to predict", type=["txt"])
 if uploaded_file is not None:
     smiles_list = uploaded_file.read().decode("utf-8").splitlines()
     st.write("SMILES loaded:")
@@ -109,9 +109,12 @@ else:
     # Single SMILES input option
     smiles = st.text_input(label="SMILES", label_visibility="collapsed", placeholder="SMILES")
     if smiles:
-        predictions = model_predict(smiles)
-        st.header('**Prediction Output (pKi Values)**')
-        st.write(predictions)
-        # Option to download the prediction
-        tmp_download_link = download_link(predictions.to_csv(index=False), 'prediction.csv', 'Click here to download your prediction!')
-        st.markdown(tmp_download_link, unsafe_allow_html=True)
+        try:
+            predictions = model_predict(smiles)
+            st.header('**Prediction Output (pKi Values)**')
+            st.write(predictions)
+            # Option to download the prediction
+            tmp_download_link = download_link(predictions.to_csv(index=False), 'prediction.csv', 'Click here to download your prediction!')
+            st.markdown(tmp_download_link, unsafe_allow_html=True)
+        except:
+            st.write(":red[There seems to be an issue with your SMILES, please double check it.]")
