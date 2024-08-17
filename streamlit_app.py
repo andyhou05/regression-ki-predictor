@@ -95,15 +95,18 @@ st.write("Not sure what SMILES notation is? It's a string representation of any 
 # Add drag-and-drop option for SMILES files
 uploaded_file = st.file_uploader("Upload a .txt file containing the SMILES you want to predict", type=["txt"])
 if uploaded_file is not None:
-    smiles_list = uploaded_file.read().decode("utf-8").splitlines()
-    st.write("SMILES loaded:")
-    st.write(smiles_list)
-    all_predictions = pd.DataFrame()
-    for smiles in smiles_list:
-        predictions = model_predict(smiles)
-        all_predictions = pd.concat([all_predictions, predictions])
-    st.header('**Prediction Output (pKi Values)**')
-    st.write(all_predictions)
+    try:
+        smiles_list = uploaded_file.read().decode("utf-8").splitlines()
+        st.write("SMILES loaded:")
+        st.write(smiles_list)
+        all_predictions = pd.DataFrame()
+        for smiles in smiles_list:
+            predictions = model_predict(smiles)
+            all_predictions = pd.concat([all_predictions, predictions])
+        st.header('**Prediction Output (pKi Values)**')
+        st.write(all_predictions)
+    except:
+        st.warning("Your file is not properly formatted, make sure the SMILES notations are correct and that the values are separated with a new line as so:  \n  \nSMILES 1  \nSMILES 2  \nSMILES 3  \nSMILES 4", icon='⚠️')
 
     # Option to download predictions
     tmp_download_link = download_link(all_predictions.to_csv(index=False), 'predictions.csv', 'Click here to download your predictions!')
@@ -120,7 +123,6 @@ else:
             # Send the pKi values to LLM for response
             with st.spinner("Analyzing data..."):
                 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-
                 completion = client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[
@@ -140,5 +142,6 @@ else:
             # Option to download the prediction
             tmp_download_link = download_link(predictions.to_csv(index=False), 'prediction.csv', 'Click here to download your prediction!')
             st.markdown(tmp_download_link, unsafe_allow_html=True)
-        except:
+        except Exception as e:
+            st.write(e)
             st.write(":red[There seems to be an issue with your SMILES, please double check it.]")
