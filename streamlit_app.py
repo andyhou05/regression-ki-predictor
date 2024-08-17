@@ -5,24 +5,10 @@ from pandas import DataFrame
 import base64
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import mordred
 from mordred import Calculator, descriptors
+from openai import OpenAI
+import os
 
-# Set the page configuration
-st.set_page_config(page_title="QSAR pKi Prediction App", page_icon="📊")
-
-# Home page with explanations
-st.sidebar.title("About")
-st.sidebar.markdown("""
-### What are SMILES?
-SMILES (Simplified Molecular Input Line Entry System) is a notation that allows a user to represent a chemical structure in a way that can be used by the computer.
-
-### What is QSAR?
-Quantitative Structure-Activity Relationship (QSAR) models are used to predict the effects, properties, or activity of a compound based on its chemical structure.
-
-### Why is this important?
-Predicting the activity of compounds helps in drug discovery, reducing the cost and time of experiments.
-""")
 
 def desc_calc(smiles: str):
     """Calculates molecular descriptors of a compound using Mordred."""
@@ -58,7 +44,24 @@ def display_dataset(dataset: DataFrame):
     st.write(dataset.head())
     st.write(dataset.shape)
 
+
 # UI of the Streamlit app
+# Set the page configuration
+st.set_page_config(page_title="QSAR pKi Prediction App", page_icon="📊")
+
+# Home page with explanations
+st.sidebar.title("About")
+st.sidebar.markdown("""
+### What are SMILES?
+SMILES (Simplified Molecular Input Line Entry System) is a notation that allows a user to represent a chemical structure in a way that can be used by the computer.
+
+### What is QSAR?
+Quantitative Structure-Activity Relationship (QSAR) models are used to predict the effects, properties, or activity of a compound based on its chemical structure.
+
+### Why is this important?
+Predicting the activity of compounds helps in drug discovery, reducing the cost and time of experiments.
+""")
+
 st.title('Regression')
 st.header('Raw Data')
 
@@ -105,6 +108,7 @@ if uploaded_file is not None:
     # Option to download predictions
     tmp_download_link = download_link(all_predictions.to_csv(index=False), 'predictions.csv', 'Click here to download your predictions!')
     st.markdown(tmp_download_link, unsafe_allow_html=True)
+    
 else:
     # Single SMILES input option
     smiles = st.text_input(label="SMILES", label_visibility="collapsed", placeholder="SMILES")
@@ -113,6 +117,26 @@ else:
             predictions = model_predict(smiles)
             st.header('**Prediction Output (pKi Values)**')
             st.write(predictions)
+            # Send the pKi values to LLM for response
+            with st.spinner("Analyzing data..."):
+                client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+                completion = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a drug researcher, the following values are pKi values of a compound against 4 target proteins: D2 and D3 dopamine receptors, 5-HT1A and 5-HT2A receptors, which were predicted from a QSAR model. With your analysis, please explain the meaning behind these values, each in bullet point. Explain whether or not this compound could be used to treat certain disease. Only give an anlysis of every pKi value, do not say anything else. If the value indicates that the compound is not suitable for a certain disease, please mention so, but do not make up anything whatsoever."},
+                        {
+                            "role": "user",
+                            "content": predictions.to_string(index=False)
+                        }
+                    ]
+                )
+                result = completion.choices[0].message.content
+                if result:
+                    st.write(result)
+                else:
+                    st.write("Something went wrong with the LLM...")
+            
             # Option to download the prediction
             tmp_download_link = download_link(predictions.to_csv(index=False), 'prediction.csv', 'Click here to download your prediction!')
             st.markdown(tmp_download_link, unsafe_allow_html=True)
