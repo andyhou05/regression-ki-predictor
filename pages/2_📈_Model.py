@@ -1,10 +1,8 @@
 import streamlit as st
 import pandas as pd
 import pickle
-from pandas import DataFrame
 import base64
 from rdkit import Chem
-from rdkit.Chem import AllChem
 from mordred import Calculator, descriptors
 from openai import OpenAI
 import os
@@ -38,59 +36,23 @@ def download_link(object_to_download, download_filename, download_link_text):
     """Generates a link to download the data."""
     b64 = base64.b64encode(object_to_download.encode()).decode()  # some strings <-> bytes conversions necessary here
     return f'<a href="data:file/txt;base64,{b64}" download="{download_filename}">{download_link_text}</a>'
+st.set_page_config(page_icon="📊")
 
-def display_dataset(dataset: DataFrame):
-    """Displays the 5 first elements and the shape of a given dataset."""
-    st.write(dataset.head())
-    st.write(dataset.shape)
-
-
-# UI of the Streamlit app
-# Set the page configuration
-st.set_page_config(page_title="QSAR pKi Prediction App", page_icon="📊")
-
-# Home page with explanations
-st.sidebar.title("About")
-st.sidebar.markdown("""
-### What are SMILES?
-SMILES (Simplified Molecular Input Line Entry System) is a notation that allows a user to represent a chemical structure in a way that can be used by the computer.
-
-### What is QSAR?
-Quantitative Structure-Activity Relationship (QSAR) models are used to predict the effects, properties, or activity of a compound based on its chemical structure.
-
-### Why is this important?
-Predicting the activity of compounds helps in drug discovery, reducing the cost and time of experiments.
-""")
-
-st.title('Regression')
-st.header('Raw Data')
-
-# The URL of the CSV file to be read into a DataFrame
-csv_urls = ["./data/5ht1a_mordred_ki_fingerprints.csv",
-            "./data/5ht2a_mordred_ki_fingerprints.csv",
-            "./data/d2_mordred_ki_fingerprints.csv",
-            "./data/d3_mordred_ki_fingerprints.csv"]
-
-# Reading the CSV data from the specified URL into a list of DataFrames
-dfs = []
-for i in range(len(csv_urls)):
-    dfs.append(pd.read_csv(csv_urls[i]))
-
-# Display the datasets
-st.subheader("5-HT1A Receptor")
-display_dataset(dfs[0])
-
-st.subheader("5-HT2A Receptor")
-display_dataset(dfs[1])
-
-st.subheader("D2 Receptor")
-display_dataset(dfs[2])
-
-st.subheader("D3 Receptor")
-display_dataset(dfs[3])
-
+st.sidebar.title("Contributors 👨‍💻")
+st.sidebar.write(
+    """
+    - **Andy Hou**
+    - **Ahmet Yilldrim**
+    - **Yaman Alhamamy**
+    - **Karina Dobkin**
+    """
+)
+st.sidebar.write("[Source Code](%s)" % "https://github.com/andyhou05/regression-ki-predictor")
+st.title("Try out our models!")
 st.write("Enter the SMILES notation of the compound you want to predict")
-st.write("Not sure what SMILES notation is? It's a string representation of any compound made so that computers can understand them, you can find some examples of [CHEMBL](%s)" % "https://www.ebi.ac.uk/chembl/")
+st.write("Not sure what SMILES notation is? It's a string representation of any compound made so that computers can understand them, you can find some examples on [CHEMBL](%s) or down below" % "https://www.ebi.ac.uk/chembl/")
+st.write("\n- **Aripiprazole**: O=C1CCc2ccc(OCCCCN3CCN(c4cccc(Cl)c4Cl)CC3)cc2N1  \n- **Chlorpromazine**: CN(C)CCCN1c2ccccc2Sc2ccc(Cl)cc21  \n- **Pramipexole**: CCCN[C@H]1CCc2nc(N)sc2C1")
+st.warning("These models are more useful to drug researchers. The goal is to predict the bioactivity of compounds that aren't very well known in order to discover new drugs. Using this model with known drugs is not helpful since the compound might have been used to train the model. But you can still test it out even if you aren't an expert!")
 
 # Add drag-and-drop option for SMILES files
 uploaded_file = st.file_uploader("Upload a .txt file containing the SMILES you want to predict", type=["txt"])
