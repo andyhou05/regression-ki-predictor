@@ -1,6 +1,6 @@
-# 🎈 Blank app template
+# 🎈 Ki Receptor Predictor
 
-A simple Streamlit app template for you to modify!
+A simple Streamlit app that allows you to predict the inhibitor constant of any compound!
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
 
@@ -17,3 +17,4 @@ A simple Streamlit app template for you to modify!
    ```
    $ streamlit run streamlit_app.py
    ```
+### You can also view it as a website: [here](https://regression-ki-predictor.streamlit.app)
